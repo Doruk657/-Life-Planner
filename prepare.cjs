@@ -5,3 +5,5 @@ if(process.env.DAYFLOW_INSPECT==='1'){const h=fs.readFileSync('public/index.html
 
 // Prevent sticky hover on iPad from highlighting two sidebar tabs.
 html=fs.readFileSync(index,'utf8');html=html.replace('</head>',`<style>.nav button:hover:not(.active){background:transparent;color:inherit}@media(hover:hover) and (pointer:fine){.nav button:hover:not(.active){background:color-mix(in srgb,var(--accent2) 28%,transparent);color:inherit}}</style></head>`);fs.writeFileSync(index,html);
+
+if(process.env.DAYFLOW_INSPECT==='1'){const content=fs.readFileSync(index,'utf8');for(const term of ['TimeEdit','function renderTasks','function renderIntegrations','function switchView','function renderView']){const pos=content.lastIndexOf(term);if(pos>=0)console.log('SOURCE_SNIPPET '+term+' '+content.slice(pos,pos+1000).replace(/\s+/g,' '));}}
