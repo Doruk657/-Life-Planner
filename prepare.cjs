@@ -24,3 +24,6 @@ html=fs.readFileSync(index,'utf8');html=html.replace('</body>',"<script>(functio
 
 // Keep the complete upcoming TimeEdit source available for weekly day matching (rather than ten items).
 html=fs.readFileSync(index,'utf8');html=html.replace('events.slice(0,10).map(card).join(\'\')','events.slice(0,300).map(card).join(\'\')');fs.writeFileSync(index,html);
+
+// Remove redundant empty TimeEdit weekly panel; keep original planner day columns.
+html=fs.readFileSync(index,'utf8');html=html.replace('</body>', '<style>#dfWeekTimeedit{display:none!important}</style></body>');fs.writeFileSync(index,html);
