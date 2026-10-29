@@ -27,3 +27,5 @@ html=fs.readFileSync(index,'utf8');html=html.replace('events.slice(0,10).map(car
 
 // Remove redundant empty TimeEdit weekly panel; keep original planner day columns.
 html=fs.readFileSync(index,'utf8');html=html.replace('</body>', '<style>#dfWeekTimeedit{display:none!important}</style></body>');fs.writeFileSync(index,html);
+
+for(const [name,src] of [['SERVER',server],['FRONT',fs.readFileSync(index,'utf8')]]){for(const term of ['applyRemote(','dayflow-modified','/api/state','revision','dayflow_timeedit','timeedit_v','function persist','const persist','function pull','function push']){let p=src.indexOf(term);if(p>=0)console.log('SYNC_INSPECT '+name+' '+term+' '+src.slice(Math.max(0,p-200),p+900).replace(/\s+/g,' '));}}
