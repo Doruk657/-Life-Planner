@@ -29,3 +29,5 @@ html=fs.readFileSync(index,'utf8');html=html.replace('events.slice(0,10).map(car
 html=fs.readFileSync(index,'utf8');html=html.replace('</body>', '<style>#dfWeekTimeedit{display:none!important}</style></body>');fs.writeFileSync(index,html);
 
 for(const [name,src] of [['SERVER',server],['FRONT',fs.readFileSync(index,'utf8')]]){for(const term of ['applyRemote(','dayflow-modified','/api/state','revision','dayflow_timeedit','timeedit_v','function persist','const persist','function pull','function push']){let p=src.indexOf(term);if(p>=0)console.log('SYNC_INSPECT '+name+' '+term+' '+src.slice(Math.max(0,p-200),p+900).replace(/\s+/g,' '));}}
+
+for(const [tag,src,terms] of [['SERVER',server,['function sanitize(','function defaults(']],['FRONT',fs.readFileSync(index,'utf8'),['const applyRemote=','async function saveRemote','async function authenticate(']]])for(const term of terms){const p=src.indexOf(term);if(p>=0)console.log('DETAIL_SYNC '+tag+' '+term+' '+src.slice(p,p+1700).replace(/\s+/g,' '));}
