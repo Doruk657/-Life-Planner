@@ -37,3 +37,8 @@ patch("const applyRemote=s=>{tasks=s.tasks||[];","function readSyncExtra(key){tr
 patch("timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Amsterdam'},revision};","timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Amsterdam'},extras:{timeedit:readSyncExtra('dayflow_v10_timeedit'),preferences:readSyncExtra('dayflow_settings_v1')},revision};");
 patch("const persist=()=>localStorage.setItem(key,JSON.stringify(state));","const persist=()=>{localStorage.setItem(key,JSON.stringify(state));window.dispatchEvent(new Event('dayflow-modified'))};window.addEventListener('dayflow-remote-applied',()=>{state=read();render()});");
 fs.writeFileSync(index,sh);
+let guarded=fs.readFileSync('server.js','utf8');
+const oldWrite='let payload;try{payload=sanitize(b)}catch(e)';
+if(!guarded.includes(oldWrite))throw Error('Legacy sync guard point not found');
+guarded=guarded.replace(oldWrite,'let payload;try{payload=sanitize(b);if(!b.extras)payload.extras=(await state(db,user.id)).extras||{}}catch(e)');
+fs.writeFileSync('server.js',guarded);
