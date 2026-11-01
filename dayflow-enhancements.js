@@ -114,8 +114,6 @@ function init(){
  window.addEventListener('dayflow-remote-applied',()=>{migrateOldData();refresh()});
  window.addEventListener('dayflow-focus-complete',recordFocus);
  window.addEventListener('storage',e=>{if(e.key===KEY)refresh()});
- const stats=document.getElementById('personalStats');
- if(stats)new MutationObserver(renderStats).observe(stats,{childList:true});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
