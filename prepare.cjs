@@ -26,7 +26,6 @@ html=fs.readFileSync(index,'utf8');html=html.replace('events.slice(0,10).map(car
 html=fs.readFileSync(index,'utf8');html=html.replace('</body>', '<style>#dfWeekTimeedit{display:none!important}</style></body>');fs.writeFileSync(index,html);
 
 
-for(const [tag,src,terms] of [['SERVER',server,['function sanitize(','function defaults(']],['FRONT',fs.readFileSync(index,'utf8'),['const applyRemote=','async function saveRemote','async function authenticate(']]])for(const term of terms){const p=src.indexOf(term);if(p>=0)console.log('DETAIL_SYNC '+tag+' '+term+' '+src.slice(p,p+1700).replace(/\s+/g,' '));}
 
 let sv=fs.readFileSync('server.js','utf8');
 const sr=/return\s*\{tasks,settings\};\}\s*async\s+function\s+route/;if(!sr.test(sv))throw Error('Server patch missing');
