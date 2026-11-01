@@ -29,7 +29,7 @@ html=fs.readFileSync(index,'utf8');html=html.replace('</body>', '<style>#dfWeekT
 
 let sv=fs.readFileSync('server.js','utf8');
 const sr=/return\s*\{tasks,settings\};\}\s*async\s+function\s+route/;if(!sr.test(sv))throw Error('Server patch missing');
-sv=sv.replace(sr,"const extras={};if(b.extras&&typeof b.extras==='object'&&!Array.isArray(b.extras)){const t=b.extras.timeedit;if(t&&typeof t==='object'&&!Array.isArray(t)){extras.timeedit={url:typeof t.url==='string'?t.url.slice(0,3000):'',updated:Number(t.updated)||0,events:Array.isArray(t.events)?t.events.slice(0,3000).filter(e=>e&&typeof e.start==='string'&&typeof e.title==='string').map(e=>({start:e.start.slice(0,60),end:String(e.end||'').slice(0,60),title:e.title.slice(0,250),location:String(e.location||'').slice(0,250),description:String(e.description||'').slice(0,250)})):[]}}const pref=b.extras.preferences;if(pref&&typeof pref==='object'&&!Array.isArray(pref)){const clean={};for(const k of ['customize','cardLayout','cardOrder','timeeditSeparateView','lifeFeatures','suite'])if(pref[k]!==undefined)clean[k]=pref[k];if(JSON.stringify(clean).length<100000)extras.preferences=clean}}return {tasks,settings,extras};} async function route");fs.writeFileSync('server.js',sv);
+sv=sv.replace(sr,"const extras={};if(b.extras&&typeof b.extras==='object'&&!Array.isArray(b.extras)){const t=b.extras.timeedit;if(t&&typeof t==='object'&&!Array.isArray(t)){extras.timeedit={url:typeof t.url==='string'?t.url.slice(0,3000):'',updated:Number(t.updated)||0,events:Array.isArray(t.events)?t.events.slice(0,3000).filter(e=>e&&typeof e.start==='string'&&typeof e.title==='string').map(e=>({start:e.start.slice(0,60),end:String(e.end||'').slice(0,60),title:e.title.slice(0,250),location:String(e.location||'').slice(0,250),description:String(e.description||'').slice(0,250)})):[]}}const pref=b.extras.preferences;if(pref&&typeof pref==='object'&&!Array.isArray(pref)){const clean={};for(const k of ['customize','cardLayout','cardOrder','timeeditSeparateView','lifeFeatures','finance','focus','suite'])if(pref[k]!==undefined)clean[k]=pref[k];if(JSON.stringify(clean).length<100000)extras.preferences=clean}}return {tasks,settings,extras};} async function route");fs.writeFileSync('server.js',sv);
 let sh=fs.readFileSync(index,'utf8');
 function patch(a,b){if(!sh.includes(a))throw Error('Missing frontend sync patch: '+a.slice(0,35));sh=sh.replace(a,b)}
 patch("const applyRemote=s=>{tasks=s.tasks||[];","function readSyncExtra(key){try{return JSON.parse(localStorage.getItem(key)||'{}')}catch{return {}}}const applyRemote=s=>{if(s.extras?.timeedit && (s.extras.timeedit.events?.length || !readSyncExtra('dayflow_v10_timeedit').events?.length)){localStorage.setItem('dayflow_v10_timeedit',JSON.stringify(s.extras.timeedit))}if(s.extras?.preferences){const previous=readSyncExtra('dayflow_settings_v1');localStorage.setItem('dayflow_settings_v1',JSON.stringify({...previous,...s.extras.preferences}))}if(!s.extras?.timeedit?.events?.length&&readSyncExtra('dayflow_v10_timeedit').events?.length){setTimeout(()=>window.dispatchEvent(new Event('dayflow-modified')),1500)}tasks=s.tasks||[];");
@@ -42,5 +42,26 @@ if(!guarded.includes(oldWrite))throw Error('Legacy sync guard point not found');
 guarded=guarded.replace(oldWrite,'let payload;try{payload=sanitize(b);if(!b.extras)payload.extras=(await state(db,user.id)).extras||{}}catch(e)');
 fs.writeFileSync('server.js',guarded);
 
-fs.copyFileSync('dayflow-suite.js','public/dayflow-suite.js');
-html=fs.readFileSync(index,'utf8');if(!html.includes('/dayflow-suite.js'))html=html.replace('</body>','<script src="/dayflow-suite.js"></script></body>');fs.writeFileSync(index,html);
+html=fs.readFileSync(index,'utf8');
+// Add Harcamalar as a native Dayflow page; keep the existing planner home and theme settings untouched.
+const viewsStart=html.indexOf('const newViews=[');
+if(viewsStart<0)throw Error('Extra-view menu definition missing');
+const viewsEnd=html.indexOf(';',viewsStart);
+let viewsDecl=html.slice(viewsStart,viewsEnd+1);
+if(!viewsDecl.includes("['expenses'")){viewsDecl=viewsDecl.slice(0,-2)+",['expenses','💶 Harcamalar']];";html=html.slice(0,viewsStart)+viewsDecl+html.slice(viewsEnd+1)}
+const titleMap="integrations:'Bağlantılarım'})[tab]";
+if(!html.includes(titleMap))throw Error('Extra-view title map missing');
+html=html.replace(titleMap,"integrations:'Bağlantılarım',expenses:'Harcamalarım'})[tab]");
+const labelsStart=html.indexOf('const labels={');
+if(labelsStart<0)throw Error('Menu labels missing');
+const labelsEnd=html.indexOf('}',labelsStart);
+if(!html.slice(labelsStart,labelsEnd).includes('expenses:'))html=html.slice(0,labelsEnd)+",expenses:'💶 Harcamalar'"+html.slice(labelsEnd);
+// Save a dated focus-session record when the existing Pomodoro completes.
+const focusDone="if(mode==='focus'){sessions++;persist();renderGoals()}";
+if(!html.includes(focusDone))throw Error('Pomodoro completion hook missing');
+html=html.replace(focusDone,"if(mode==='focus'){sessions++;persist();renderGoals();window.dispatchEvent(new CustomEvent('dayflow-focus-complete',{detail:{minutes:durations.focus}}))}");
+fs.writeFileSync(index,html);
+fs.copyFileSync('dayflow-enhancements.js','public/dayflow-enhancements.js');
+html=fs.readFileSync(index,'utf8');
+if(!html.includes('/dayflow-enhancements.js'))html=html.replace('</body>','<script src="/dayflow-enhancements.js"></script></body>');
+fs.writeFileSync(index,html);
